@@ -9,30 +9,52 @@
 //History:	    Date		Resp. Eng.			Modification
 //              _______		_________________	_____________
 //				2/1/17		Tyler Burger		initial 
+//				2/4/17		Tyler Burger		add deck creation 
+//				2/5/17		Tyler BUrger		create shuffling algorithm
 //
 //Input:
-//	Ordered_Deck.txt
+//	N/A
 //			
 //Output:
 //  Shuffled_Deck_(#).txt
 //===========================================================================
 
+/*
+DEBUG HELPER
+
+//=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+
+int chkpnt = 0;
+cout << "checkpoint " << chkpnt << endl;
+chkpnt++;
+//=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+
+
+//=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+
+cout << "checkpoint " << chkpnt << endl;
+chkpnt++;
+//=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+
+
+*/
+
 #include "stdafx.h"
 #include <iostream>
+#include <cstdlib>
 #include <ctime>
 #include <fstream>
 #include <cassert>
 #include <random>
+#include <vector>
 
 using namespace std;
 
 //function prototypes
-//void Ordered_Deck_Load();		//Load in a .txt file with a precompiled ordered list of cards.
 int Welcome_Screen();			//Display a welcome screen on the console and prompt user for
 								//the number of decks to be created and shuffled.
 void Menu();					//Display main menu on welcome screen.
 void line();					//Output separator line in console.
 int Decks_to_be_Shuffled(int deck_num);	//Verify with the user on how many decks are to be shuffled.
+void Deck_Creator(int deck_num, vector<int> &d_num, vector<int> &d_suit);	//Create the two vectors that hold the data for the decks
+void Deck_Shuffler(vector<int> &d_num, vector<int> &d_suit, vector<int> &nd_num, vector<int> &nd_suit);	//shuffle deck vectors and create two 
+																										//new vectors that contain a shuffled deck
 
 //===========================================================================					MAIN
 
@@ -46,6 +68,32 @@ int main()
 	
 	//Confirm number of decks with user
 	deck_num = Decks_to_be_Shuffled(deck_num);
+
+	//Create ordered deck(s)
+	vector<int> d_num(deck_num * 52);	//Vector for card numbers
+	vector<int> d_suit(deck_num * 52);	//Vector for card suits
+	Deck_Creator(deck_num, d_num, d_suit);
+	
+	//Test ordered deck compilation
+	int card_num;
+	cout << '\n';
+	for (card_num = 0; card_num < 52*deck_num; card_num++)
+	{
+		cout << card_num << '\t' << d_num[card_num] << '\t' << d_suit[card_num] << endl;
+	}
+
+	//Shuffle Deck(s)
+	vector<int> nd_num;
+	vector<int> nd_suit;
+
+	Deck_Shuffler(d_num, d_suit, nd_num, nd_suit);
+
+	//Test shuffled deck compilation
+	cout << '\n';
+	for (card_num = 0; card_num < 52 * deck_num; card_num++)
+	{
+		cout << card_num << '\t' << nd_num[card_num] << '\t' << nd_suit[card_num] << endl;
+	}
 
     return 0;
 }
@@ -134,4 +182,68 @@ int Decks_to_be_Shuffled(int deck_num)
 		}
 	} while (pass == 0);
 	return deck_num;
+}
+
+//===========================================================================					Deck_Creator
+
+void Deck_Creator(int deck_num, vector<int> &d_num, vector<int> &d_suit)
+{
+	//Create Loop Variables
+	int card_num = 0;
+	int i;
+	int j;
+	int k;
+
+	for (i = 0; i < deck_num; i++)
+	{
+		for (j = 0; j < 4; j++)
+		{
+			for (k = 0; k < 13; k++)
+			{
+				d_num[card_num] = k;
+				d_suit[card_num] = j;
+				card_num++;
+			}
+		}
+	}
+}
+
+//===========================================================================					Deck_Shuffler
+
+void Deck_Shuffler(vector<int> &d_num, vector<int> &d_suit, vector<int> &nd_num, vector<int> &nd_suit)
+
+{
+	//Get System Time
+	unsigned seed = time(0);
+	//Seed Random Number Generator
+	srand(seed);
+
+	int len = d_num.size();
+	int i = 0;
+	int remove;
+
+	do
+	{
+		//Use rand to get an element to place and remove
+		remove = rand() % d_num.size();
+
+		//set removal element to ith element in shuffled deck
+		int temp = d_num[remove];
+		nd_num.push_back(temp);
+		temp = d_suit[remove];
+		nd_suit.push_back(temp);
+
+		//increment to next card
+		i++;
+
+		//erase the previously used card from the ordered deck
+		d_num.erase(d_num.begin() + remove);
+		d_suit.erase(d_suit.begin() + remove);
+
+		//check to see if both vectors match in length
+		assert(nd_num.size() == nd_suit.size());
+
+		
+	} while (i < len);
+
 }
